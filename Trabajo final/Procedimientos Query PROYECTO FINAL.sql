@@ -5,28 +5,6 @@
 
 use TecnoDigitalBD;
 
-
---Funciones
-/*
-	* ObtenerSubTotal()
-*/
-drop FUNCTION if exists ObtenerSubTotal;
-go
-
-CREATE FUNCTION ObtenerSubTotal (@CodigoOrdenes AS varchar(255))
-RETURNS float
-AS
-BEGIN
-return   (select sum(Productos.Precio) 
-	 from Ordenes 
-	 inner join Productos
-	 on Ordenes.IdProducto = Productos.IdProducto
-	 where Ordenes.Codigo = @CodigoOrdenes);
-END;
-go
-
-
-
 --insert:
 /*
 	* TiposEmpleados
@@ -116,6 +94,7 @@ AS
 	end
 go
 
+
 exec ProcInsertarEmpleado 'Nombres1', 'Apellidos1', '402-4015107-1', null, 1, 1, 'Programador1', 'user1', '123';
 exec ProcInsertarEmpleado 'Nombres2', 'Apellidos2', '402-4015107-2', null, 2, 2, 'Programador2', 'user2', '123';
 exec ProcInsertarEmpleado 'Nombres3', 'Apellidos3', '402-4015107-3', null, 3, 3, 'Programador3', 'user3', '123';
@@ -126,6 +105,7 @@ exec ProcInsertarEmpleado 'Nombres7', 'Apellidos7', '402-4015107-7', null, 7, 7,
 exec ProcInsertarEmpleado 'Nombres8', 'Apellidos8', '402-4015107-8', null, 8, 8, 'Programador8', 'user8', '123';
 exec ProcInsertarEmpleado 'Nombres9', 'Apellidos9', '402-4015107-9', null, 9, 9, 'Programador9', 'user9', '123';
 exec ProcInsertarEmpleado 'Nombres10', 'Apellidos10', '402-4015107-10', null, 10, 10, 'Programador10', 'user10', '123';
+
 
 
 /*
@@ -164,6 +144,7 @@ AS
 		Select @UltimoIdClientes as 'UltimoIdClientes', @UltimoIdPersona as 'UltimoIdPersona';
 	end
 go
+
 
 exec ProcInsertarCliente 'Nombres1', 'Apellidos1', '402-4015107-11', null, 1, 'user1', '123';
 exec ProcInsertarCliente 'Nombres2', 'Apellidos2', '402-4015107-12', null, 1, 'user2', '123';
@@ -270,9 +251,9 @@ AS
 	BEGIN
 
 		--Optener Ultimo Id Insertado de Ordenes
-		DECLARE @SubTotal int;
+		DECLARE @SubTotal float;
 		set @SubTotal = (
-			select sum(Productos.Precio) 
+			select sum(Productos.Precio * Ordenes.Cantidad) 
 			from Ordenes 
 			inner join Productos
 			on Ordenes.IdProducto = Productos.IdProducto
@@ -295,17 +276,12 @@ AS
 		DECLARE @UltimoIdOrdenes int;
 		set @UltimoIdOrdenes = SCOPE_IDENTITY();
 
-		Select top(1) * from Ventas where CodigoOrdenes = @CodigoOrdenes order by IdVenta desc;
+		Select top(1) * from Ventas where CodigoOrdenes = @CodigoOrdenes order by CodigoOrdenes desc;
 	end
 go
 
 
-
-declare @Codigo varchar(255);
-set @Codigo =  CONVERT(varchar(255), NEWID());
-
-exec ProcInsertarVentas 'C50C8747-6131-4699-97C2-D772C679720F', 1, 1, 10000;
-
+exec ProcInsertarVentas '@CodigoOrdenes', 1, 1, 100000;
 
 /*
 	7)	Realizar las siguientes vistas:
@@ -324,11 +300,25 @@ Drop view if EXISTS VistaListaOrdenes;
 go
 
 create view VistaListaOrdenes as (
-	Select * from Ordenes
+	Select
+	Ordenes.Codigo,
+	Ordenes.IdCliente,
+	Ordenes.IdEmpleado,
+	Ordenes.IdProducto,
+	Ordenes.Cantidad,
+	Ventas.SubTotal,
+	Ventas.ITBIS,
+	Ventas.Total,
+	Ventas.Efectivo,
+	Ventas.Cambio
+	from Ventas 
+	inner join Ordenes
+	on Ventas.CodigoOrdenes = Ordenes.Codigo
 );
 go
 
 select * from VistaListaOrdenes;
+
 /*
 	b)	Informacion de clientes
 */
@@ -336,18 +326,42 @@ Drop view if EXISTS VistaInfoClientes;
 go
 
 create view VistaInfoClientes as (
-	Select * from Clientes
+	Select
+	Clientes.IdTiposClientes,
+	Clientes.Usuario,
+	Personas.Nombres, 
+	Personas.Apellidos,
+	Personas.Cedula,
+	Personas.Pasaporte 
+	from Clientes
 	inner join Personas
 	on Clientes.IdPersona = Personas.IdPersona
 );
 go
 
 select * from VistaInfoClientes;
-select * from Personas;
-select * from Clientes;
-select * from Ventas;
 
+/*
+	c)	Informacion de empleados(si aplica)
+*/
+Drop view if EXISTS VistaInfoEmpleados;
+go
 
+create view VistaInfoEmpleados as (
+	Select
+	Empleados.IdTipoEmpleado,
+	Empleados.Usuario,
+	Personas.Nombres, 
+	Personas.Apellidos,
+	Personas.Cedula,
+	Personas.Pasaporte 
+	from Empleados
+	inner join Personas
+	on Empleados.IdPersona = Personas.IdPersona
+);
+go
+
+select * from VistaInfoEmpleados;
 
 
 
@@ -362,6 +376,35 @@ select * from Ventas;
 
 
 --Tools:
+select * from Personas;
+select * from Clientes;
+select * from Empleados;
+
+select * from Ventas;
+select * from Ordenes;
+
+
+
+--Funciones
+/*
+	* ObtenerSubTotal()
+*/
+drop FUNCTION if exists ObtenerSubTotal;
+go
+
+CREATE FUNCTION ObtenerSubTotal (@CodigoOrdenes AS varchar(255))
+RETURNS float
+AS
+BEGIN
+return   (select sum(Productos.Precio) 
+	 from Ordenes 
+	 inner join Productos
+	 on Ordenes.IdProducto = Productos.IdProducto
+	 where Ordenes.Codigo = @CodigoOrdenes);
+END;
+go
+
+
 drop procedure if exists ProcInsertarEmpleado
 go
 
