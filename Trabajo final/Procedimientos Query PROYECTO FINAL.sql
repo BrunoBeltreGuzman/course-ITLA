@@ -196,6 +196,25 @@ exec ProcInsertarProductos 10, 'Producto10', 'Esta es la descripción del product
 
 
 /*
+	* Insertar Inventario
+*/
+drop procedure if exists ProcUpdateStockInventario
+go
+
+CREATE PROCEDURE ProcUpdateStockInventario
+@IdProducto int, @Stock int
+AS
+	BEGIN
+		--Insertar Productos
+		Update Inventario set Stock = @Stock where @IdProducto = @IdProducto;
+		Select 'Update Inventario';
+	end
+go
+
+exec ProcUpdateStockInventario 1, 'Producto1', 'Esta es la descripción del producto1', 500;
+
+
+/*
 	* Insertar Ordenes
 */
 drop procedure if exists ProcInsertarOrdenes
@@ -284,6 +303,24 @@ go
 exec ProcInsertarVentas '@CodigoOrdenes', 1, 1, 100000;
 
 /*
+	d)	Actualizar cantidad en existencia de un producto con registro en tabla modificaciones de quien fue que lo modifico.
+*/
+drop procedure if exists Procs
+go
+
+CREATE PROCEDURE Procs
+	@Efectivo int
+AS
+	BEGIN
+
+	end
+go
+
+
+exec Procs '@CodigoOrdenes';
+select * from Inventario;
+
+/*
 	7)	Realizar las siguientes vistas:
 		a)	Listar ordenes con su detalle
 		b)	Informacion de clientes
@@ -363,16 +400,25 @@ go
 
 select * from VistaInfoEmpleados;
 
-
-
 /*
-	8)	Crear los siguientes procedimientos almacenados
-		a)	Insertar registro de venta
-		b)	Insertar empleado
-		c)	Insertar producto 
-		d)	Actualizar cantidad en existencia de un producto con registro en tabla modificaciones de quien fue que lo modifico.
-		e)	Filtrar cliente por ciudad.
+	d)	Clientes con más pedidos
 */
+Drop view if EXISTS VistaClientesOrdenes
+go
+
+create view VistaClientesOrdenes as (
+	Select COUNT(Ordenes.Codigo),
+	Ventas.CodigoOrdenes
+	from Ventas 
+	inner join Ordenes
+	on Ordenes.Codigo = Ventas.CodigoOrdenes
+	group by Ventas.CodigoOrdenes
+);
+go
+
+select * from VistaClientesOrdenes;
+
+
 
 
 --Tools:

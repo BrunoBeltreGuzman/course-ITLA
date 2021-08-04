@@ -151,7 +151,7 @@ DROP TABLE if EXISTS Inventario;
 CREATE TABLE Inventario (
 	IdInventario int Identity(1, 1) primary key not null,
 	IdProducto int not null,
-	Stok int not null,
+	Stock int not null,
 	UltimaActualizacion datetime not null default GETDATE()
 );
 /*
