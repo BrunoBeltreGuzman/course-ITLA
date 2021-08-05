@@ -305,19 +305,34 @@ exec ProcInsertarVentas '@CodigoOrdenes', 1, 1, 100000;
 /*
 	d)	Actualizar cantidad en existencia de un producto con registro en tabla modificaciones de quien fue que lo modifico.
 */
-drop procedure if exists Procs
+drop procedure if exists ProcNuevoLog
 go
 
-CREATE PROCEDURE Procs
-	@Efectivo int
+CREATE PROCEDURE ProcNuevoLog
+	@IdUsuario int, @Log Varchar(255)
+
 AS
 	BEGIN
 
+	--Insert Log
+	insert into Logs
+	(IdUsuario, Log)
+	Values
+	(@IdUsuario, @Log);
+
+	
+	--Optener Ultimo Id Insertado de Ordenes
+	DECLARE @UltimoIdLog int;
+	set @UltimoIdLog = SCOPE_IDENTITY();
+
+	Select @UltimoIdLog as 'UltimoIdLog';
 	end
 go
 
 
-exec Procs '@CodigoOrdenes';
+exec ProcNuevoLog 1, 'test';
+
+
 select * from Inventario;
 
 /*
@@ -407,10 +422,10 @@ Drop view if EXISTS VistaClientesOrdenes
 go
 
 create view VistaClientesOrdenes as (
-	Select COUNT(Ordenes.Codigo),
+	Select COUNT(Ordenes.Codigo) as 'cantidad',
 	Ventas.CodigoOrdenes
-	from Ventas 
-	inner join Ordenes
+	from Ordenes 
+	inner join Ventas
 	on Ordenes.Codigo = Ventas.CodigoOrdenes
 	group by Ventas.CodigoOrdenes
 );
@@ -418,58 +433,3 @@ go
 
 select * from VistaClientesOrdenes;
 
-
-
-
---Tools:
-select * from Personas;
-select * from Clientes;
-select * from Empleados;
-
-select * from Ventas;
-select * from Ordenes;
-
-
-
---Funciones
-/*
-	* ObtenerSubTotal()
-*/
-drop FUNCTION if exists ObtenerSubTotal;
-go
-
-CREATE FUNCTION ObtenerSubTotal (@CodigoOrdenes AS varchar(255))
-RETURNS float
-AS
-BEGIN
-return   (select sum(Productos.Precio) 
-	 from Ordenes 
-	 inner join Productos
-	 on Ordenes.IdProducto = Productos.IdProducto
-	 where Ordenes.Codigo = @CodigoOrdenes);
-END;
-go
-
-
-drop procedure if exists ProcInsertarEmpleado
-go
-
-CREATE PROCEDURE ProcInsertarEmpleado 
-@Nombres varchar(255), @Gender nchar(1) 
-AS
-	BEGIN
-		BEGIN TRANSACTION 
-		BEGIN TRY
-			--Aqui
-
-			--Cinfimacion de la TRANSACTION
-			COMMIT TRANSACTION 
-		END TRY
-
-		BEGIN CATCH
-			--Ocurrió un error, deshacemos los cambios 
-			ROLLBACK TRANSACTION
-			PRINT 'Ha ocurrido un error en ProcInsertarEmpleado!'
-		END CATCH
-	end
-go

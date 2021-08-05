@@ -38,12 +38,12 @@ references Ventas(CodigoOrdenes);
 --Relacion de Ordenes a Clientes
 alter table Ordenes
 add FOREIGN KEY (IdCliente)
-references Clientes(IdCliente);
+references Personas(IdPersona);
 
 --Relacion de Ordenes a Empleados
 alter table Ordenes
 add FOREIGN KEY (IdEmpleado)
-references Empleados(IdEmpleado);
+references Personas(IdPersona);
 
 --Relacion de Ordenes a Productos
 alter table Ordenes
@@ -53,12 +53,12 @@ references Productos(IdProducto);
 --Relacion de Ventas a Clientes
 alter table Ventas
 add FOREIGN KEY (IdCliente)
-references Clientes(IdCliente);
+references Personas(IdPersona);
 
 --Relacion de Ventas a Empleado
 alter table Ventas
 add FOREIGN KEY (IdEmpleado)
-references Empleados(IdEmpleado);
+references Personas(IdPersona);
 
 --Relacion de Inventario a Productos
 alter table Inventario 
