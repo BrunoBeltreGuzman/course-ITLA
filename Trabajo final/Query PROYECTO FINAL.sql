@@ -1,7 +1,7 @@
 ﻿/*
 	4)	Query de creación de bases de datos, tablas, relaciones, vistas, procedimientos almacenados.
 */
---create database TecnoDigitalBD;
+--create database TecnoDigitalBD;sss
 
 use TecnoDigitalBD;
 
